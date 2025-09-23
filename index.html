@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RepTrack - Track Your Progress</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+    <!-- Login Overlay -->
+    <div id="loginOverlay" class="login-overlay">
+        <div class="login-container">
+            <div class="login-header">
+                <h1>RepTrack</h1>
+                <p>Track your fitness journey</p>
+            </div>
+            
+            <div class="login-tabs">
+                <button class="tab-btn active" data-tab="login">Login</button>
+                <button class="tab-btn" data-tab="signup">Sign Up</button>
+            </div>
+            
+            <form id="loginForm" class="auth-form active">
+                <div class="input-group">
+                    <input type="email" id="loginEmail" placeholder="Email" required>
+                </div>
+                <div class="input-group">
+                    <input type="password" id="loginPassword" placeholder="Password" required>
+                </div>
+                <button type="submit" class="auth-btn">Login</button>
+            </form>
+            
+            <form id="signupForm" class="auth-form">
+                <div class="input-group">
+                    <input type="text" id="signupName" placeholder="Full Name" required>
+                </div>
+                <div class="input-group">
+                    <input type="email" id="signupEmail" placeholder="Email" required>
+                </div>
+                <div class="input-group">
+                    <input type="password" id="signupPassword" placeholder="Password" required>
+                </div>
+                <div class="input-group">
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="publicLeaderboard">
+                        <span class="checkmark"></span>
+                        Allow my stats on public leaderboard
+                    </label>
+                </div>
+                <button type="submit" class="auth-btn">Sign Up</button>
+            </form>
+            
+            <div id="authMessage" class="auth-message"></div>
+        </div>
+    </div>
+
+    <!-- Main App -->
+    <div id="mainApp" class="main-app hidden">
+        <!-- Header -->
+        <header class="app-header">
+            <div class="header-content">
+                <h1>RepTrack</h1>
+                <div class="header-actions">
+                    <button id="addWorkoutBtn" class="btn btn-primary">
+                        <span class="btn-icon">+</span>
+                        Add Workout
+                    </button>
+                    <button id="createTeamBtn" class="btn btn-secondary">
+                        <span class="btn-icon">👥</span>
+                        Create Team
+                    </button>
+                    <button id="logoutBtn" class="btn btn-outline">
+                        <span class="btn-icon">🚪</span>
+                        Logout
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Dashboard -->
+        <main class="dashboard">
+            <!-- Stats Cards -->
+            <section class="stats-section">
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-icon">💪</div>
+                        <div class="stat-content">
+                            <h3 id="totalWorkouts">0</h3>
+                            <p>Total Workouts</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">🏋️</div>
+                        <div class="stat-content">
+                            <h3 id="totalReps">0</h3>
+                            <p>Total Reps</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">📈</div>
+                        <div class="stat-content">
+                            <h3 id="currentStreak">0</h3>
+                            <p>Day Streak</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">🏆</div>
+                        <div class="stat-content">
+                            <h3 id="rank">-</h3>
+                            <p>Your Rank</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Main Content Grid -->
+            <div class="content-grid">
+                <!-- Workouts Section -->
+                <section class="workouts-section">
+                    <div class="section-header">
+                        <h2>Recent Workouts</h2>
+                        <button id="refreshWorkouts" class="refresh-btn">🔄</button>
+                    </div>
+                    <div class="workouts-container">
+                        <div id="workoutsSkeleton" class="skeleton-list">
+                            <div class="skeleton-item"></div>
+                            <div class="skeleton-item"></div>
+                            <div class="skeleton-item"></div>
+                        </div>
+                        <div id="workoutsList" class="workouts-list"></div>
+                        <div id="noWorkouts" class="empty-state hidden">
+                            <div class="empty-icon">💪</div>
+                            <h3>No workouts yet</h3>
+                            <p>Start your fitness journey by adding your first workout!</p>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Progress Chart -->
+                <section class="chart-section">
+                    <div class="section-header">
+                        <h2>Progress Overview</h2>
+                        <select id="chartExercise" class="chart-select">
+                            <option value="">Select Exercise</option>
+                        </select>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="progressChart"></canvas>
+                    </div>
+                </section>
+
+                <!-- Team Leaderboard -->
+                <section class="team-leaderboard-section">
+                    <div class="section-header">
+                        <h2>Team Leaderboard</h2>
+                        <button id="joinTeamBtn" class="btn btn-small">Join Team</button>
+                    </div>
+                    <div class="leaderboard-container">
+                        <div id="teamLeaderboardSkeleton" class="skeleton-list">
+                            <div class="skeleton-item"></div>
+                            <div class="skeleton-item"></div>
+                            <div class="skeleton-item"></div>
+                        </div>
+                        <div id="teamLeaderboard" class="leaderboard-list"></div>
+                        <div id="noTeam" class="empty-state hidden">
+                            <div class="empty-icon">👥</div>
+                            <h3>No team yet</h3>
+                            <p>Create or join a team to see team rankings!</p>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Public Leaderboard -->
+                <section class="public-leaderboard-section">
+                    <div class="section-header">
+                        <h2>Public Leaderboard</h2>
+                        <button id="togglePublic" class="btn btn-small">Toggle Public</button>
+                    </div>
+                    <div class="leaderboard-container">
+                        <div id="publicLeaderboardSkeleton" class="skeleton-list">
+                            <div class="skeleton-item"></div>
+                            <div class="skeleton-item"></div>
+                            <div class="skeleton-item"></div>
+                        </div>
+                        <div id="publicLeaderboard" class="leaderboard-list"></div>
+                        <div id="noPublic" class="empty-state hidden">
+                            <div class="empty-icon">🌍</div>
+                            <h3>No public data</h3>
+                            <p>Enable public sharing to see global rankings!</p>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </main>
+    </div>
+
+    <!-- Add Workout Modal -->
+    <div id="addWorkoutModal" class="modal hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Add Workout</h2>
+                <button id="closeWorkoutModal" class="close-btn">&times;</button>
+            </div>
+            <form id="workoutForm">
+                <div class="form-group">
+                    <label for="exerciseName">Exercise</label>
+                    <input type="text" id="exerciseName" placeholder="e.g., Bench Press" required>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="weight">Weight (kg)</label>
+                        <input type="number" id="weight" placeholder="0" min="0" step="0.5">
+                    </div>
+                    <div class="form-group">
+                        <label for="reps">Reps</label>
+                        <input type="number" id="reps" placeholder="0" min="1" required>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="sets">Sets</label>
+                    <input type="number" id="sets" placeholder="1" min="1" value="1" required>
+                </div>
+                <div class="form-group">
+                    <label for="notes">Notes (optional)</label>
+                    <textarea id="notes" placeholder="Add any notes about your workout..."></textarea>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" id="cancelWorkout" class="btn btn-outline">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Add Workout</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Create Team Modal -->
+    <div id="createTeamModal" class="modal hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Create Team</h2>
+                <button id="closeTeamModal" class="close-btn">&times;</button>
+            </div>
+            <form id="teamForm">
+                <div class="form-group">
+                    <label for="teamName">Team Name</label>
+                    <input type="text" id="teamName" placeholder="e.g., Gym Warriors" required>
+                </div>
+                <div class="form-group">
+                    <label for="teamDescription">Description (optional)</label>
+                    <textarea id="teamDescription" placeholder="Describe your team..."></textarea>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" id="cancelTeam" class="btn btn-outline">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Create Team</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Join Team Modal -->
+    <div id="joinTeamModal" class="modal hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Join Team</h2>
+                <button id="closeJoinModal" class="close-btn">&times;</button>
+            </div>
+            <div class="team-list">
+                <div id="availableTeamsSkeleton" class="skeleton-list">
+                    <div class="skeleton-item"></div>
+                    <div class="skeleton-item"></div>
+                </div>
+                <div id="availableTeams" class="teams-list"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div id="loadingOverlay" class="loading-overlay hidden">
+        <div class="loading-spinner"></div>
+        <p>Loading...</p>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
