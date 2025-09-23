@@ -1,7 +1,7 @@
 // RepTrack - Complete Fitness Tracking Webapp
 // Supabase Configuration - Replace with your own values
-const SUPABASE_URL = 'YOUR_SUPABASE_URL_HERE';
-const SUPABASE_ANON_KEY = 'YOUR_SUPABASE_ANON_KEY_HERE';
+const SUPABASE_URL = 'https://ivjgipulwxvtejhixiva.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml2amdpcHVsd3h2dGVqaGl4aXZhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTg2NjA1NzMsImV4cCI6MjA3NDIzNjU3M30.yUa1LCVaUd_WpW9Ayjpun2TOpdfQDSvi9yDZsfVzI_o';
 
 // Initialize Supabase client
 const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
