@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RepTrack - Fitness Tracking</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+</head>
+<body>
+    <!-- Background Elements -->
+    <div class="bg-gradient"></div>
+    <div class="floating-shapes">
+        <div class="shape shape-1"></div>
+        <div class="shape shape-2"></div>
+        <div class="shape shape-3"></div>
+    </div>
+
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-brand">
+                <h1>💪 RepTrack</h1>
+            </div>
+            <div class="nav-menu" id="nav-menu">
+                <button class="nav-item active" data-section="workouts">Workouts</button>
+                <button class="nav-item" data-section="progress">Progress</button>
+                <button class="nav-item" data-section="teams">Teams</button>
+                <button class="nav-item" data-section="leaderboard">Leaderboard</button>
+            </div>
+            <div class="nav-actions">
+                <button class="btn btn-secondary" id="profile-btn">Profile</button>
+                <button class="btn btn-primary" id="auth-btn">Login</button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <!-- Authentication Section -->
+        <section class="auth-section" id="auth-section">
+            <div class="auth-container">
+                <div class="auth-card">
+                    <div class="auth-header">
+                        <h2>Welcome to RepTrack</h2>
+                        <p>Track your fitness journey with style</p>
+                    </div>
+                    
+                    <!-- Login Form -->
+                    <div class="auth-form" id="login-form">
+                        <h3>Sign In</h3>
+                        <div class="form-group">
+                            <label for="login-email">Email</label>
+                            <input type="email" id="login-email" placeholder="Enter your email" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="login-password">Password</label>
+                            <input type="password" id="login-password" placeholder="Enter your password" required>
+                        </div>
+                        <button class="btn btn-primary btn-full" id="login-btn">Sign In</button>
+                        <p class="auth-switch">
+                            Don't have an account? <a href="#" id="show-signup">Sign up</a>
+                        </p>
+                    </div>
+
+                    <!-- Signup Form -->
+                    <div class="auth-form hidden" id="signup-form">
+                        <h3>Create Account</h3>
+                        <div class="form-group">
+                            <label for="signup-name">Name</label>
+                            <input type="text" id="signup-name" placeholder="Enter your name" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="signup-email">Email</label>
+                            <input type="email" id="signup-email" placeholder="Enter your email" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="signup-password">Password</label>
+                            <input type="password" id="signup-password" placeholder="Create a password" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="checkbox-label">
+                                <input type="checkbox" id="public-leaderboard">
+                                <span class="checkmark"></span>
+                                Allow my stats on public leaderboard
+                            </label>
+                        </div>
+                        <button class="btn btn-primary btn-full" id="signup-btn">Create Account</button>
+                        <p class="auth-switch">
+                            Already have an account? <a href="#" id="show-login">Sign in</a>
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- App Content -->
+        <section class="app-section hidden" id="app-section">
+            <!-- Workouts Section -->
+            <div class="section" id="workouts-section">
+                <div class="section-header">
+                    <h2>My Workouts</h2>
+                    <button class="btn btn-primary" id="add-workout-btn">+ Add Workout</button>
+                </div>
+                
+                <div class="workouts-container">
+                    <div class="workouts-list" id="workouts-list">
+                        <!-- Workouts will be dynamically loaded here -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Progress Section -->
+            <div class="section hidden" id="progress-section">
+                <div class="section-header">
+                    <h2>Progress Charts</h2>
+                    <div class="chart-controls">
+                        <select id="exercise-select">
+                            <option value="">Select Exercise</option>
+                        </select>
+                        <select id="timeframe-select">
+                            <option value="7">Last 7 days</option>
+                            <option value="30" selected>Last 30 days</option>
+                            <option value="90">Last 90 days</option>
+                            <option value="all">All time</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="chart-container">
+                    <canvas id="progress-chart"></canvas>
+                </div>
+            </div>
+
+            <!-- Teams Section -->
+            <div class="section hidden" id="teams-section">
+                <div class="section-header">
+                    <h2>Teams</h2>
+                    <button class="btn btn-primary" id="create-team-btn">+ Create Team</button>
+                </div>
+                
+                <div class="teams-grid" id="teams-grid">
+                    <!-- Teams will be dynamically loaded here -->
+                </div>
+            </div>
+
+            <!-- Leaderboard Section -->
+            <div class="section hidden" id="leaderboard-section">
+                <div class="section-header">
+                    <h2>Leaderboard</h2>
+                    <div class="leaderboard-controls">
+                        <select id="leaderboard-type">
+                            <option value="personal">Personal Stats</option>
+                            <option value="team">Team Rankings</option>
+                            <option value="public">Public Leaderboard</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="leaderboard-container" id="leaderboard-container">
+                    <!-- Leaderboard content will be dynamically loaded here -->
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Modals -->
+    <!-- Add/Edit Workout Modal -->
+    <div class="modal" id="workout-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="workout-modal-title">Add Workout</h3>
+                <button class="modal-close" id="close-workout-modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="workout-form">
+                    <div class="form-group">
+                        <label for="exercise-name">Exercise</label>
+                        <input type="text" id="exercise-name" placeholder="e.g., Bench Press" required>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="weight">Weight (kg)</label>
+                            <input type="number" id="weight" placeholder="0" min="0" step="0.5">
+                        </div>
+                        <div class="form-group">
+                            <label for="reps">Reps</label>
+                            <input type="number" id="reps" placeholder="0" min="1" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="sets">Sets</label>
+                            <input type="number" id="sets" placeholder="1" min="1" required>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="notes">Notes (optional)</label>
+                        <textarea id="notes" placeholder="Add any notes about this workout..."></textarea>
+                    </div>
+                    <div class="modal-actions">
+                        <button type="button" class="btn btn-secondary" id="cancel-workout">Cancel</button>
+                        <button type="submit" class="btn btn-primary">Save Workout</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Create Team Modal -->
+    <div class="modal" id="team-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Create Team</h3>
+                <button class="modal-close" id="close-team-modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="team-form">
+                    <div class="form-group">
+                        <label for="team-name">Team Name</label>
+                        <input type="text" id="team-name" placeholder="Enter team name" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="team-description">Description</label>
+                        <textarea id="team-description" placeholder="Describe your team..."></textarea>
+                    </div>
+                    <div class="modal-actions">
+                        <button type="button" class="btn btn-secondary" id="cancel-team">Cancel</button>
+                        <button type="submit" class="btn btn-primary">Create Team</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Profile Modal -->
+    <div class="modal" id="profile-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Profile Settings</h3>
+                <button class="modal-close" id="close-profile-modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="profile-form">
+                    <div class="form-group">
+                        <label for="profile-name">Name</label>
+                        <input type="text" id="profile-name" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="profile-public-leaderboard">
+                            <span class="checkmark"></span>
+                            Allow my stats on public leaderboard
+                        </label>
+                    </div>
+                    <div class="modal-actions">
+                        <button type="button" class="btn btn-secondary" id="cancel-profile">Cancel</button>
+                        <button type="submit" class="btn btn-primary">Save Changes</button>
+                    </div>
+                </form>
+                <div class="profile-actions">
+                    <button class="btn btn-danger" id="logout-btn">Sign Out</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div class="loading-overlay hidden" id="loading-overlay">
+        <div class="spinner"></div>
+        <p>Loading...</p>
+    </div>
+
+    <!-- Toast Notifications -->
+    <div class="toast-container" id="toast-container"></div>
+
+    <script src="app.js"></script>
+</body>
+</html>
